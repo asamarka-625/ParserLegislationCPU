@@ -1,8 +1,14 @@
+x-worker-template: &worker-template
+  build: .
+  command: ["python", "run_recognition.py"]
+  env_file:
+    - .env
+  restart: on-failure
+
 services:
-  pdf-ocr:
+  parser:
     build: .
-    volumes:
-      - ./logs:/app/logs
+    command: ["python", "run_parser.py"]
     env_file:
       - .env
     logging:
@@ -10,4 +16,52 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    restart: unless-stopped
+    restart: on-failure
+
+  worker-1:
+    <<: *worker-template
+    container_name: worker-1
+    environment:
+      - WORKER_ID=1
+
+  worker-2:
+    <<: *worker-template
+    container_name: worker-2
+    environment:
+      - WORKER_ID=2
+
+  worker-3:
+    <<: *worker-template
+    container_name: worker-3
+    environment:
+      - WORKER_ID=3
+
+  worker-4:
+    <<: *worker-template
+    container_name: worker-4
+    environment:
+      - WORKER_ID=4
+
+  worker-5:
+    <<: *worker-template
+    container_name: worker-5
+    environment:
+      - WORKER_ID=5
+
+  worker-6:
+    <<: *worker-template
+    container_name: worker-6
+    environment:
+      - WORKER_ID=6
+
+  worker-7:
+    <<: *worker-template
+    container_name: worker-7
+    environment:
+      - WORKER_ID=7
+
+  worker-8:
+    <<: *worker-template
+    container_name: worker-8
+    environment:
+      - WORKER_ID=8

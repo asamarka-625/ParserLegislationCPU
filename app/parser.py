@@ -8,7 +8,6 @@ from app.config import get_config
 from app.models import DataLegislation
 
 
-
 config = get_config()
 
 

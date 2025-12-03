@@ -1,5 +1,5 @@
 # Внешние зависимости
-from typing import Optional, List
+from typing import List
 import httpx
 # Внутренние модули
 from app.config import get_config
@@ -8,32 +8,14 @@ from app.config import get_config
 config = get_config()
 
 
-# Получаем свой IP
-async def get_my_ip() -> Optional[str]:
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get("https://httpbin.org/ip", timeout=10.0)
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("origin")
-
-            else:
-                config.logger.error(f"Ошибка получения IP: {response.status_code}")
-                return None
-
-        except Exception as e:
-            config.logger.error(f"Ошибка получения IP: {e}")
-            return None
-
-
 # Получаем ids законопроектов
-async def get_legislation_ids(ip_address: str) -> List[int]:
+async def get_legislation_ids() -> List[int]:
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 config.GET_LEGISLATION_IDS,
                 json={
-                    "ip": ip_address,
+                    "worker_id": config.WORKER_ID,
                     "limit": config.LEGISLATION_LIMIT
                 },
                 timeout=30.0
@@ -58,16 +40,16 @@ async def get_legislation_ids(ip_address: str) -> List[int]:
 
 # Пингуем воркер
 async def ping_worker(
-    ip_address: str,
     processed_data: int,
     expire_seconds: int
 ) -> bool:
+    print("expire_seconds", expire_seconds)
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 config.PING_WORKER,
                 json={
-                    "ip": ip_address,
+                    "worker_id": config.WORKER_ID,
                     "processed_data": processed_data,
                     "expire_seconds": expire_seconds
                 },
@@ -93,15 +75,13 @@ async def ping_worker(
 
 
 # Удаляем воркер
-async def delete_worker(
-    ip_address: str,
-) -> None:
+async def delete_worker() -> None:
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                config.PING_WORKER,
+                config.DELETE_WORKER,
                 json={
-                    "ip": ip_address
+                    "worker_id": config.WORKER_ID
                 },
                 timeout=30.0
             )
@@ -111,7 +91,7 @@ async def delete_worker(
                 message = data.get("message")
 
                 if message is not None:
-                    config.logger.error(f"(delete_worker) message: {message}")
+                    config.logger.info(f"(delete_worker) message: {message}")
 
             else:
                 config.logger.error(f"(delete_worker) Ошибка запроса к контролеру: {response.status_code}")

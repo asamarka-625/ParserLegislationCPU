@@ -14,16 +14,25 @@ load_dotenv()
 class Config:
     _database_url: str = field(default_factory=lambda: os.getenv("DATABASE_URL"))
     logger: logging.Logger = field(init=False)
+
     LEGISLATION_LIMIT: int = field(default_factory=lambda: int(os.getenv("LEGISLATION_LIMIT")))
+    COEFF_EXPIRE_SECONDS: float = field(default_factory=lambda: float(os.getenv("COEFF_EXPIRE_SECONDS")))
+
     CONTROLLER: str = field(default_factory=lambda: os.getenv("CONTROLLER"))
-    GET_LEGISLATION_IDS: str = f"{CONTROLLER}/api/v1/legislation/ids"
-    PING_WORKER: str = f"{CONTROLLER}/api/v1/worker/ping"
-    COEFF_EXPIRE_SECONDS: int = field(default_factory=lambda: int(os.getenv("COEFF_EXPIRE_SECONDS")))
+    GET_LEGISLATION_IDS: str = field(init=False)
+    PING_WORKER: str = field(init=False)
+    DELETE_WORKER: str = field(init=False)
+
+    WORKER_ID: int = field(default_factory=lambda: int(os.getenv("WORKER_ID") or 0))
 
     def __post_init__(self):
         self.logger = setup_logger(
             level=os.getenv("LOG_LEVEL", "INFO")
         )
+
+        self.GET_LEGISLATION_IDS: str = f"{self.CONTROLLER}/api/v1/legislation/ids"
+        self.PING_WORKER: str = f"{self.CONTROLLER}/api/v1/worker/ping"
+        self.DELETE_WORKER: str = f"{self.CONTROLLER}/api/v1/worker/delete"
 
         self.validate()
         self.logger.info("Configuration initialized")

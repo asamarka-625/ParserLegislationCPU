@@ -11,11 +11,6 @@ services:
     command: ["python", "run_parser.py"]
     env_file:
       - .env
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
     restart: on-failure
 
   worker-1:

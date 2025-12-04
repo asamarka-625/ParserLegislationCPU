@@ -78,7 +78,7 @@ class ParserPDF:
                 tasks = []
                 for data in current_batch:
                     publication_number = data["publication_number"]
-                    publication_id = data["publication_id"]
+                    publication_id = data["id"]
 
                     task = self.get_async_response(
                         url=f"{self.url_base}{publication_number}",

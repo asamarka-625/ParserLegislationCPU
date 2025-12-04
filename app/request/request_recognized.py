@@ -9,7 +9,7 @@ config = get_config()
 
 
 # Получаем бинарные данные законопроектов
-async def get_binary_legislation() -> List[Dict[str, Union[int, bytes]]]:
+async def get_binary_legislation() -> List[Dict[str, Union[int, str]]]:
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(

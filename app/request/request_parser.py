@@ -3,6 +3,7 @@ from typing import List, Dict, Union
 import httpx
 # Внутренние модули
 from app.config import get_config
+from app.utils import get_base_64_from_bytes
 
 
 config = get_config()
@@ -38,11 +39,13 @@ async def get_number_legislation() -> List[Dict[str, Union[int, str]]]:
 async def update_binary_legislation(id_: int, binary: bytes) -> None:
     async with httpx.AsyncClient() as client:
         try:
+            binary_base_64 = get_base_64_from_bytes(binary)
+
             response = await client.patch(
                 config.UPDATE_LEGISLATION_BINARY,
                 json={
                     "id": id_,
-                    "binary": binary
+                    "binary": binary_base_64
                 },
                 timeout=30.0
             )

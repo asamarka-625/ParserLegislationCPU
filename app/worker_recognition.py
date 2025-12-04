@@ -6,6 +6,8 @@ from contextlib import asynccontextmanager
 from app.config import get_config
 from app.recognized import extract_text_from_pdf_bytes
 from app.request import get_binary_legislation, update_text_legislation, delete_worker
+from app.utils import get_binary_bytes
+
 
 _shutdown_event = asyncio.Event()
 config = get_config()
@@ -25,7 +27,7 @@ async def worker_recognized_pdf():
                     break
 
                 legislation_id = data["id"]
-                legislation_binary_pdf = data["binary"]
+                legislation_binary_pdf = get_binary_bytes(data["binary"])
 
                 config.logger.info(f"Извлечение текста для законопроекта с id = {legislation_id}")
                 # Запускаем CPU-bound операцию в отдельном потоке

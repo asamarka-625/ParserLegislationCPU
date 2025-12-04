@@ -3,60 +3,43 @@ import asyncio
 import signal
 from contextlib import asynccontextmanager
 # Внутренние модули
-from app.crud import sql_get_legislation_by_have_binary_and_not_text, sql_update_text
 from app.config import get_config
 from app.recognized import extract_text_from_pdf_bytes
-from app.database import setup_database
-from app.request import get_legislation_ids, ping_worker, delete_worker
+from app.request import get_binary_legislation, update_text_legislation, delete_worker
 
 _shutdown_event = asyncio.Event()
 config = get_config()
 
 
 async def worker_recognized_pdf():
-    await setup_database()
-
     config.logger.info("Запуск воркера для обработки PDF")
 
     try:
-        config.logger.info("Получаем ids законопроектов, которые нужно обработать")
-        legislation_ids = await get_legislation_ids()
-        config.logger.info(f"Получено {len(legislation_ids)} законопроектов для обработки")
+        config.logger.info("Получаем данные о законопроектах из базы данных")
+        legislation_data = await get_binary_legislation()
+        config.logger.info(f"Получено {len(legislation_data)} законопроектов для обработки")
 
-        while legislation_ids and not _shutdown_event.is_set():
-            config.logger.info("Получаем данные о законопроектах из базы данных")
-            legislations = await sql_get_legislation_by_have_binary_and_not_text(legislation_ids)
-
-            if not legislations:
-                config.logger.info("Нет законопроектов для обработки")
-                break
-
-            config.logger.info(f"Начинаем обработку {len(legislations)} законопроектов")
-
-            for index, (legislation_id, legislation_binary_pdf) in enumerate(legislations):
+        while legislation_data and not _shutdown_event.is_set():
+            for index, data in enumerate(legislation_data):
                 if _shutdown_event.is_set():
                     break
 
-                # Пинг воркера для обновления активности
-                flag_request = await ping_worker(
-                    processed_data=1 if index != 0 else 0,
-                    expire_seconds=int(len(legislation_binary_pdf) * config.COEFF_EXPIRE_SECONDS),
-                )
-
-                if not flag_request:
-                    config.logger.warning(f"Пинг не прошел для законопроекта {legislation_id}")
-                    return False
+                legislation_id = data["id"]
+                legislation_binary_pdf = data["binary"]
 
                 config.logger.info(f"Извлечение текста для законопроекта с id = {legislation_id}")
                 # Запускаем CPU-bound операцию в отдельном потоке
                 text = extract_text_from_pdf_bytes(legislation_binary_pdf)
 
                 config.logger.info(f"Запись текста в базу данных для законопроекта {legislation_id}")
-                await sql_update_text(legislation_id=legislation_id, content=text)
+                await update_text_legislation(
+                    id_=legislation_id,
+                    text=text
+                )
 
-            config.logger.info("Получаем следующий набор ids законопроектов")
-            legislation_ids = await get_legislation_ids()
-            config.logger.info(f"Получено {len(legislation_ids)} законопроектов для следующей итерации")
+            config.logger.info("Получаем следующий набор данные из базы данных")
+            legislation_data = await get_binary_legislation()
+            config.logger.info(f"Получено {len(legislation_data)} законопроектов для следующей итерации")
 
     except asyncio.CancelledError:
         config.logger.info("Задача воркера была отменена")

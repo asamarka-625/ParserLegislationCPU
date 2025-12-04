@@ -19,8 +19,12 @@ class Config:
     COEFF_EXPIRE_SECONDS: float = field(default_factory=lambda: float(os.getenv("COEFF_EXPIRE_SECONDS")))
 
     CONTROLLER: str = field(default_factory=lambda: os.getenv("CONTROLLER"))
-    GET_LEGISLATION_IDS: str = field(init=False)
-    PING_WORKER: str = field(init=False)
+
+    GET_LEGISLATION_NOT_BINARY: str = field(init=False)
+    UPDATE_LEGISLATION_BINARY: str = field(init=False)
+
+    GET_LEGISLATION_BINARY: str = field(init=False)
+    UPDATE_LEGISLATION_TEXT: str = field(init=False)
     DELETE_WORKER: str = field(init=False)
 
     WORKER_ID: int = field(default_factory=lambda: int(os.getenv("WORKER_ID") or 0))
@@ -30,8 +34,11 @@ class Config:
             level=os.getenv("LOG_LEVEL", "INFO")
         )
 
-        self.GET_LEGISLATION_IDS: str = f"{self.CONTROLLER}/api/v1/legislation/ids"
-        self.PING_WORKER: str = f"{self.CONTROLLER}/api/v1/worker/ping"
+        self.GET_LEGISLATION_NOT_BINARY: str = f"{self.CONTROLLER}/api/v1/legislation/not_binary"
+        self.UPDATE_LEGISLATION_BINARY: str = f"{self.CONTROLLER}/api/v1/legislation/update/binary"
+
+        self.GET_LEGISLATION_BINARY: str = f"{self.CONTROLLER}/api/v1/legislation/free"
+        self.UPDATE_LEGISLATION_TEXT: str = f"{self.CONTROLLER}/api/v1/legislation/update/text"
         self.DELETE_WORKER: str = f"{self.CONTROLLER}/api/v1/worker/delete"
 
         self.validate()

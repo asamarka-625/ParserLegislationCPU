@@ -1,11 +1,10 @@
 # Внешние зависимости
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Union
 import asyncio
 import httpx
 from fake_useragent import UserAgent
 # Внутренние модули
 from app.config import get_config
-from app.models import DataLegislation
 
 
 config = get_config()
@@ -56,8 +55,8 @@ class ParserPDF:
 
     async def async_run(
             self,
-            list_legislation: List[DataLegislation]
-    ) -> List[Tuple[str, bytes]]:
+            list_publication_number: List[Dict[str, Union[int, str]]]
+    ) -> List[Tuple[int, bytes]]:
         # Создаем клиент для каждой пачки
         timeout = httpx.Timeout(
             connect=30.0,  # Таймаут на подключение
@@ -70,17 +69,20 @@ class ParserPDF:
         results = []
 
         async with httpx.AsyncClient(timeout=timeout, limits=limits) as client:
-            for batch_start in range(0, len(list_legislation), batch_size):
+            for batch_start in range(0, len(list_publication_number), batch_size):
                 batch_end = batch_start + batch_size
-                current_batch = list_legislation[batch_start:batch_end]
+                current_batch = list_publication_number[batch_start:batch_end]
 
-                config.logger.info(f"Обрабатываем батч {batch_start}-{batch_end} из {len(list_legislation)}")
+                config.logger.info(f"Обрабатываем батч {batch_start}-{batch_end} из {len(list_publication_number)}")
 
                 tasks = []
-                for legislation in current_batch:
+                for data in current_batch:
+                    publication_number = data["publication_number"]
+                    publication_id = data["publication_id"]
+
                     task = self.get_async_response(
-                        url=f"{self.url_base}{legislation.publication_number}",
-                        publication_number=legislation.publication_number,
+                        url=f"{self.url_base}{publication_number}",
+                        publication_number=publication_number,
                         client=client
                     )
                     tasks.append(task)
@@ -99,22 +101,22 @@ class ParserPDF:
                 successful = 0
                 failed = 0
 
-                for legislation, content in zip(current_batch, batch_contents):
+                for publication_number, content in zip(current_batch, batch_contents):
                     if isinstance(content, Exception):
                         config.logger.error(
-                            f"Не удалась загрузить PDF файл (publication_number: {legislation.publication_number}): {content}"
+                            f"Не удалась загрузить PDF файл (publication_number: {publication_number}): {content}"
                         )
                         failed += 1
                         continue
 
                     if not content:
                         config.logger.error(
-                            f"Пустой контент для PDF (publication_number: {legislation.publication_number})"
+                            f"Пустой контент для PDF (publication_number: {publication_number})"
                         )
                         failed += 1
                         continue
 
-                    results.append((legislation.publication_number, content))
+                    results.append((publication_id, content))
                     successful += 1
 
                 config.logger.info(f"Батч {batch_start}-{batch_end} завершен: {successful} успешно, {failed} ошибок")

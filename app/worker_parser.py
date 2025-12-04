@@ -29,7 +29,7 @@ async def worker_parser_pdf():
 
             for i, data in enumerate(contents_binary):
                 config.logger.info(f"Обновляем binary_pdf в таблице. Итерация: {i + 1}/{len(contents_binary)}")
-                await asyncio.sleep(10)
+                await asyncio.sleep(0.1)
                 await update_binary_legislation(
                     id_=data[0],
                     binary=data[1]

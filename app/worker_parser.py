@@ -13,15 +13,14 @@ config = get_config()
 async def worker_parser_pdf():
     while True:
         all_legislation_number = await get_number_legislation()
-        batch_size = 300
 
         if len(all_legislation_number) == 0:
             break
 
-        for batch_sart in range(0, len(all_legislation_number), batch_size):
-            config.logger.info(f"Берем партию {batch_size} для запросов {batch_sart}/{len(all_legislation_number)}")
+        for batch_sart in range(0, len(all_legislation_number), config.PARSER_BATCH_SIZE):
+            config.logger.info(f"Берем партию {config.PARSER_BATCH_SIZE} для запросов {batch_sart}/{len(all_legislation_number)}")
 
-            batch_end = batch_sart + batch_size
+            batch_end = batch_sart + config.PARSER_BATCH_SIZE
             parser = ParserPDF()
             contents_binary = await parser.async_run(
                 list_publication_number=all_legislation_number[batch_sart:batch_end]

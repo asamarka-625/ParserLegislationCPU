@@ -17,6 +17,7 @@ class Config:
 
     LEGISLATION_LIMIT: int = field(default_factory=lambda: int(os.getenv("LEGISLATION_LIMIT")))
     COEFF_EXPIRE_SECONDS: float = field(default_factory=lambda: float(os.getenv("COEFF_EXPIRE_SECONDS")))
+    PARSER_BATCH_SIZE: int = field(default_factory=lambda: int(os.getenv("PARSER_BATCH_SIZE")))
 
     CONTROLLER: str = field(default_factory=lambda: os.getenv("CONTROLLER"))
 

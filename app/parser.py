@@ -78,7 +78,6 @@ class ParserPDF:
                 tasks = []
                 for data in current_batch:
                     publication_number = data["publication_number"]
-                    publication_id = data["id"]
 
                     task = self.get_async_response(
                         url=f"{self.url_base}{publication_number}",
@@ -101,7 +100,10 @@ class ParserPDF:
                 successful = 0
                 failed = 0
 
-                for publication_number, content in zip(current_batch, batch_contents):
+                for (publication_data, content) in zip(current_batch, batch_contents):
+                    publication_number = publication_data["publication_number"]
+                    publication_id = publication_data["id"]
+
                     if isinstance(content, Exception):
                         config.logger.error(
                             f"Не удалась загрузить PDF файл (publication_number: {publication_number}): {content}"

@@ -66,7 +66,7 @@ async def update_text_legislation(id_: int, text: str) -> None:
 async def delete_worker() -> None:
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.delete(
+            response = await client.post(
                 config.DELETE_WORKER,
                 json={
                     "worker_id": config.WORKER_ID

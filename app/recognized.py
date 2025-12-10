@@ -1,9 +1,12 @@
 # Внешние зависимости
 import pytesseract
 from PIL import Image
+import PIL.ImageFile
 import fitz
 import io
 
+
+PIL.ImageFile.MAX_IMAGE_PIXELS = 300000000  # 300 млн пикселей
 
 # Извлекает текст из байт-кода PDF используя OCR
 def extract_text_from_pdf_bytes(pdf_bytes):
